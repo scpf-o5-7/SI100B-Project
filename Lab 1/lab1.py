@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Generate an empty image with 480 height and 640 width
     blanks = np.zeros((480, 640, 3), dtype=np.uint8)  # Create a black image
 
