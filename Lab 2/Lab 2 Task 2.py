@@ -1,7 +1,9 @@
 import cv2
 
 # Load pre-trained cascade file
-face_cascade = cv2.CascadeClassifier("haar-cascade-files/haarcascade_frontalface_default.xml")
+face_cascade = cv2.CascadeClassifier(
+    "haar-cascade-files/haarcascade_frontalface_default.xml"
+)
 # Read image and convert to grayscale
 image = cv2.imread("img/demo.png")
 # Convert to gray image
@@ -12,10 +14,10 @@ faces = face_cascade.detectMultiScale(
 )
 print(faces)
 # Draw rectangles around detected faces
-for (x, y, w, h) in faces:
+for x, y, w, h in faces:
     cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 # Display the result
-cv2.imshow('Face Detection Result', image)
+cv2.imshow("Face Detection Result", image)
 # Save the result image
 cv2.imwrite("face_detected.png", image)
 # Wait for a key press and close the image window
