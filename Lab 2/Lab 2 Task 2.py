@@ -1,9 +1,9 @@
 import cv2
 
 # Load pre-trained cascade file
-face_cascade = cv2.CascadeClassifier("E:/SI100B Project/Lab 2/haar-cascade-files/haarcascade_frontalface_default.xml")
+face_cascade = cv2.CascadeClassifier("haar-cascade-files/haarcascade_frontalface_default.xml")
 # Read image and convert to grayscale
-image = cv2.imread("E:/SI100B Project/Lab 2/img/test1.jpg")
+image = cv2.imread("img/demo.png")
 # Convert to gray image
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 # Detect faces
