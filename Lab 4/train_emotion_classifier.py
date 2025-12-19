@@ -1,21 +1,22 @@
 import os
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+os.environ['CONDA_DLL_SEARCH_MODIFICATION_ENABLE'] = '1'
 
 import torch
 import my_net
 
-from model import emotionNet
+from model import SI100FaceNet
 
-batchsize    = 32
+batchsize = 32
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print("Training Device: ", device)
 
 # Load dataset
-train_loader, classes= my_net.utility.loadTrain("./images", batchsize)
+train_loader, classes= my_net.utility.loadTrain("./img", batchsize)
 
 # Set model, lossfunc and optimizer
-model = emotionNet(printtoggle=True)
+model = SI100FaceNet(printtoggle=True)
 model = model.to(device)
 lossfun = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)

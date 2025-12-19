@@ -1,13 +1,12 @@
-# model.py
 import torch
 import torch.nn as nn
 
-class emotionNet(nn.Module):
+class SI100FaceNet(nn.Module):
     def __init__(self, printtoggle=False):
         super().__init__()
         self.print = printtoggle
 
-        self.conv1 = nn.Conv2d(1, 64, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.relu1 = nn.LeakyReLU(negative_slope=0.01)
 

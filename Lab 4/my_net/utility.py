@@ -1,27 +1,15 @@
-#!/usr/bin/env python
-#-*- coding: utf-8 -*-
-# Author: Zhenghao Li
-# Email: lizhenghao@shanghaitech.edu.cn
-# Institute: SIST
-# Date: 2024-12-10
-
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import DataLoader, Subset
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
-#from classify import makeEmotionNet
 import os
 
 transform = {
         "training":
     transforms.Compose(
     [
-#     transforms.RandomHorizontalFlip(),  # 随机水平翻转
-#     transforms.RandomRotation(10),  # 随机旋转 ±10度
-#     transforms.RandomCrop(44),  # 随机裁剪到44x44大小
-#     transforms.Resize((48, 48)),  # 调整回48x48大小
      transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]),
         "evaluate":
@@ -31,10 +19,6 @@ transform = {
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]),
 }
 
-#transform = transforms.Compose(
-#    [
-#     transforms.ToTensor(),
-#     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 def imshow_with_labels(images, labels, classes):
     num_images = len(images)
@@ -44,8 +28,6 @@ def imshow_with_labels(images, labels, classes):
 
     for i in range(grid_size**2):
         if i< num_images:
-            # img = to_pil_image(images[i])
-            # extract that image (need to transpose it back to 32x32x3)
             img = images.data[i].numpy().transpose((1,2,0))
             img = img/2 + .5 # undo normalization
             label = classes[labels[i]]
@@ -90,15 +72,12 @@ def loadTest(path, batch_size=0):
 
 def function2trainModel(model, device, train_loader, lossFun, optimizer):
     epochs = 10
-    #model,lossfun,optimizer = makeFaceNet()
 
     model.to(device)
 
     # initialize losses
     trainLoss = np.zeros(epochs)
-    #devLoss   = torch.zeros(epochs)
     trainAcc  = np.zeros(epochs)
-    #devAcc    = torch.zeros(epochs)
 
     for epochi in range(epochs):
         # loop over training data batches
@@ -129,4 +108,3 @@ def function2trainModel(model, device, train_loader, lossFun, optimizer):
         trainAcc[epochi] = 100*np.mean(batchAcc)
     return trainLoss, trainAcc, model
 
-#trainLoss,trainAcc,model = function2trainModel()
