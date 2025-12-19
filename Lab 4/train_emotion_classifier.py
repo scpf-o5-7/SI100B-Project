@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-#-*- coding: utf-8 -*-
-# Author: Zhenghao Li
-# Date: 2024-11-08
+import os
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 import torch
 import my_net
