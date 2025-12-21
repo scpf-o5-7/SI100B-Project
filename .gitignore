@@ -24,8 +24,6 @@ __pycache__/
 .venv/
 venv/
 
-.vscode/
-
 .DS_Store
 Thumbs.db
 desktop.ini
