@@ -1,0 +1,29 @@
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
+*.ico
+*.svg
+
+Lab 2/img/
+Lab 3/img/
+Lab 4/img_bonus/
+Lab 4/img/
+
+Lab 2/haar-cascade-files/
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+.env
+.venv/
+venv/
+
+.DS_Store
+Thumbs.db
+desktop.ini
