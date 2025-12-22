@@ -33,5 +33,5 @@ print("Loss and accuracy in every iteration")
 for i, (loss, acc) in enumerate(zip(losses, accuracy)):
     print(f"Iteration {i}, loss：{loss:.2f}, accuracy: {acc:.2f}")
 
-PATH = './face_expression.pth'
+PATH = config["save_name"]
 torch.save(model.state_dict(), PATH)

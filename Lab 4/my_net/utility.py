@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader, Subset
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 import os
+import sys
 
 transform = {
         "training":
@@ -60,7 +61,10 @@ def loadTrain(path, batch_size):
     print( (torch.min(images.data),torch.max(images.data)) )
     
     # Show images
-    imshow_with_labels(images, labels, trainset.classes)
+    if sys.stdout.isatty():
+        imshow_with_labels(images, labels, trainset.classes)
+    else:
+        print("Not showing images as not in interactive mode.")
 
     return train_loader, trainset.classes
 
