@@ -18,6 +18,7 @@ print("Training Device: ", device)
 
 # Load dataset
 train_loader, classes= my_net.utility.loadTrain(config['data_path'], batchsize)
+val_loader, _ = my_net.utility.loadTest(config['data_path'], batchsize) 
 
 # Set model, lossfunc and optimizer
 model = SI100FaceNet(num_classes=config['num_classes'], printtoggle=True)
@@ -26,12 +27,14 @@ lossfun = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # Start training process
-losses, accuracy, _ = my_net.utility.function2trainModel(model, device, train_loader, lossfun, optimizer)
+losses, train_accuracy, val_accuracy, model = my_net.utility.function2trainModel(
+    model, device, train_loader, lossfun, optimizer, val_loader
+)
 
 print("--------------------------")
 print("Loss and accuracy in every iteration")
-for i, (loss, acc) in enumerate(zip(losses, accuracy)):
-    print(f"Iteration {i}, loss：{loss:.2f}, accuracy: {acc:.2f}")
+for i, (loss, train_acc, val_acc) in enumerate(zip(losses, train_accuracy, val_accuracy)):
+    print(f"Iteration {i}, loss: {loss:.4f}, train_accuracy: {train_acc:.2f}%, val_accuracy: {val_acc:.2f}%")
 
 PATH = config["save_name"]
 torch.save(model.state_dict(), PATH)

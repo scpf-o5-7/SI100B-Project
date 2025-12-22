@@ -74,41 +74,41 @@ def loadTest(path, batch_size=0):
 
     return test_loader, testset.classes
 
-def function2trainModel(model, device, train_loader, lossFun, optimizer):
+def function2trainModel(model, device, train_loader, lossFun, optimizer, val_loader=None):
     epochs = 10
-
     model.to(device)
-
-    # initialize losses
     trainLoss = np.zeros(epochs)
-    trainAcc  = np.zeros(epochs)
+    trainAcc = np.zeros(epochs)
+    valAcc = np.zeros(epochs)
 
     for epochi in range(epochs):
-        # loop over training data batches
-        model.train() # switch to train mode
-        batchLoss = []
-        batchAcc = []
-        for batch_idx, (X,y) in enumerate(train_loader):
-            # push data to GPU
-            X = X.to(device)
-            y = y.to(device)
-            # forward pass and loss
+        model.train()
+        batchLoss, batchAcc = [], []
+        for (X, y) in train_loader:
+            X, y = X.to(device), y.to(device)
             yHat = model(X)
             loss = lossFun(yHat, y)
-
-            # backpropagation
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
-            # loss and accuracy for this batch
             batchLoss.append(loss.item())
-            batchAcc.append(torch.mean((torch.argmax(yHat, dim=1)==y).float()).item())
-            print(f"Epoch: {epochi+1}/{epochs}, Batch: {batch_idx}, {batch_idx+1}/{len(train_loader)}")
-
-        # end of batch loop
-        # get average losses and accuracies across the batches
+            batchAcc.append((torch.argmax(yHat, dim=1) == y).float().mean().item())
+        
         trainLoss[epochi] = np.mean(batchLoss)
-        trainAcc[epochi] = 100*np.mean(batchAcc)
-    return trainLoss, trainAcc, model
+        trainAcc[epochi] = 100 * np.mean(batchAcc)
+
+        if val_loader is not None:
+            model.eval()
+            val_batchAcc = []
+            with torch.no_grad():
+                for X_val, y_val in val_loader:
+                    X_val, y_val = X_val.to(device), y_val.to(device)
+                    yHat_val = model(X_val)
+                    val_batchAcc.append((torch.argmax(yHat_val, dim=1) == y_val).float().mean().item())
+            valAcc[epochi] = 100 * np.mean(val_batchAcc)
+            print(f"Epoch {epochi+1}: Train Acc = {trainAcc[epochi]:.2f}%, Val Acc = {valAcc[epochi]:.2f}%")
+        else:
+            print(f"Epoch {epochi+1}: Train Acc = {trainAcc[epochi]:.2f}%")
+
+    return trainLoss, trainAcc, valAcc, model
 
