@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class SI100FaceNet(nn.Module):
-    def __init__(self, printtoggle=False):
+    def __init__(self, num_classes=3, printtoggle=False):
         super().__init__()
         self.print = printtoggle
 
@@ -18,7 +18,7 @@ class SI100FaceNet(nn.Module):
         self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.relu3 = nn.LeakyReLU(negative_slope=0.01)
 
-        self.fc = nn.Linear(256 * 6 * 6, 3)
+        self.fc = nn.Linear(256 * 6 * 6, num_classes)
         self.relu_fc = nn.LeakyReLU(negative_slope=0.01)
 
     def forward(self, x):

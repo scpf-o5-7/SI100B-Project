@@ -16,7 +16,7 @@ print("Training Device: ", device)
 train_loader, classes= my_net.utility.loadTrain("./img", batchsize)
 
 # Set model, lossfunc and optimizer
-model = SI100FaceNet(printtoggle=True)
+model = SI100FaceNet(num_classes=3, printtoggle=True)
 model = model.to(device)
 lossfun = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)

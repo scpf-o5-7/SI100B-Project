@@ -6,7 +6,7 @@ os.environ['CONDA_DLL_SEARCH_MODIFICATION_ENABLE'] = '1'
 import torch
 import my_net
 
-from model_bonus import SI100FaceNet_Bonus
+from model import SI100FaceNet
 
 batchsize = 32
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -16,7 +16,7 @@ print("Training Device: ", device)
 train_loader, classes= my_net.utility.loadTrain("./img_bonus", batchsize)
 
 # Set model, lossfunc and optimizer
-model = SI100FaceNet_Bonus(printtoggle=True)
+model = SI100FaceNet(num_classes=7, printtoggle=True)
 model = model.to(device)
 lossfun = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
