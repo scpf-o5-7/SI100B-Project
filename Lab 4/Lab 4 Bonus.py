@@ -13,7 +13,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print("Training Device: ", device)
 
 # Load dataset
-train_loader, classes= my_net.utility.loadTrain("./img", batchsize)
+train_loader, classes= my_net.utility.loadTrain("./img_bonus", batchsize)
 
 # Set model, lossfunc and optimizer
 model = SI100FaceNet_Bonus(printtoggle=True)
