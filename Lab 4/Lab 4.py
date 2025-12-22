@@ -7,16 +7,20 @@ import torch
 import my_net
 
 from model import SI100FaceNet
+from config import CLASS_CONFIG
+
+task_type = input("Enter task type (basic/bonus): ").strip().lower()
+config = CLASS_CONFIG[task_type]
 
 batchsize = 32
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print("Training Device: ", device)
 
 # Load dataset
-train_loader, classes= my_net.utility.loadTrain("./img", batchsize)
+train_loader, classes= my_net.utility.loadTrain(config['data_path'], batchsize)
 
 # Set model, lossfunc and optimizer
-model = SI100FaceNet(num_classes=3, printtoggle=True)
+model = SI100FaceNet(num_classes=config['num_classes'], printtoggle=True)
 model = model.to(device)
 lossfun = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
