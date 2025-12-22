@@ -34,7 +34,7 @@ losses, train_accuracy, val_accuracy, model = my_net.utility.function2trainModel
 print("--------------------------")
 print("Loss and accuracy in every iteration")
 for i, (loss, train_acc, val_acc) in enumerate(zip(losses, train_accuracy, val_accuracy)):
-    print(f"Iteration {i}, loss: {loss:.4f}, train_accuracy: {train_acc:.2f}%, val_accuracy: {val_acc:.2f}%")
+    print(f"Iteration {i}, loss: {loss:.4f}, train_accuracy: {train_acc:.2f}%")
 
 PATH = config["save_name"]
 torch.save(model.state_dict(), PATH)
