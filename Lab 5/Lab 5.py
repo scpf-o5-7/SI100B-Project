@@ -1,17 +1,26 @@
 import torch
-import my_net
 import numpy as np
 from sklearn.metrics import confusion_matrix, classification_report
+import sys
+import os
+
+sys.path.append('../Lab 4')
+
+from model import SI100FaceNet
+
+import my_net.utility as utility
 
 batch_size = 32
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(device)
 
-model, lossfun, optimizer = my_net.classify.makeEmotionNet(False)
-PATH = "../Lab 4/face_expression.pth"
-model.load_state_dict(torch.load(PATH, weights_only=True))
+model_path = "../Lab 4/face_expression.pth"
+data_path = "../Lab 4/img/"
+
+model = SI100FaceNet(num_classes=3, printtoggle=False)
+model.load_state_dict(torch.load(model_path, weights_only=True))
 model.to(device)
-test_loader, classes = my_net.utility.loadTest("../Lab 4/img/", batch_size)
+
+test_loader, classes = utility.loadTest(data_path, batch_size)
 
 X, y = next(iter(test_loader))
 
@@ -25,14 +34,16 @@ with torch.no_grad():
     new_labels = predicted.cpu().numpy()
     true_labels = y.cpu().numpy()
 
-    my_net.utility.imshow_with_labels(
+    utility.imshow_with_labels(
         X[:batch_size].cpu(), new_labels[:batch_size], classes
     )
 
-    cm = confusion_matrix(true_labels, new_labels)
-    print("Confusion Matrix:")
-    print(cm)
-
+    cm = confusion_matrix(true_labels, new_labels, labels=range(len(classes)))
+    print("\nConfusion Matrix (Single Batch):")
+    print("     " + " ".join([f"{cls:>6}" for cls in classes]))
+    for i, class_name in enumerate(classes):
+        print(f"{class_name:>5} {cm[i]}")
+    
     class_accuracy = {}
     total_correct = 0
     total_samples = len(true_labels)
@@ -46,10 +57,10 @@ with torch.no_grad():
 
     overall_accuracy = total_correct / total_samples * 100
 
-    print("\nStep 2 - Accuracy Results:")
+    print("\n=== Step 2 - Single Batch Accuracy Results ===")
     for class_name in classes:
         print(f"{class_name}: {class_accuracy[class_name]:.2f}%")
-    print(f"Total: {overall_accuracy:.2f}%")
+    print(f"Overall: {overall_accuracy:.2f}%")
 
     class_recall = {}
     weighted_recall = 0
@@ -62,12 +73,12 @@ with torch.no_grad():
         class_weight = np.sum(cm[i, :]) / total_samples
         weighted_recall += recall * class_weight * 100
 
-    print("\nStep 3 - Recall Results:")
+    print("\n=== Step 3 - Single Batch Recall Results ===")
     for class_name in classes:
         print(f"{class_name}: {class_recall[class_name]:.2f}%")
-    print(f"Total: {weighted_recall:.2f}%")
+    print(f"Weighted Recall: {weighted_recall:.2f}%")
 
-print("\nStep 4 - Full Dataset Evaluation:")
+print("\n=== Step 4 - Full Dataset Evaluation ===")
 all_true_labels = []
 all_predicted_labels = []
 
@@ -81,9 +92,14 @@ with torch.no_grad():
         all_true_labels.extend(y.cpu().numpy())
         all_predicted_labels.extend(predicted.cpu().numpy())
 
-cm_full = confusion_matrix(all_true_labels, all_predicted_labels)
+all_true_labels = np.array(all_true_labels)
+all_predicted_labels = np.array(all_predicted_labels)
+
+cm_full = confusion_matrix(all_true_labels, all_predicted_labels, labels=range(len(classes)))
 print("Full Dataset Confusion Matrix:")
-print(cm_full)
+print("     " + " ".join([f"{cls:>6}" for cls in classes]))
+for i, class_name in enumerate(classes):
+    print(f"{class_name:>5} {cm_full[i]}")
 
 full_class_accuracy = {}
 full_total_correct = 0
@@ -98,6 +114,11 @@ for i in range(len(classes)):
 
 full_overall_accuracy = full_total_correct / full_total_samples * 100
 
+print("\n=== Full Dataset Accuracy Results ===")
+for class_name in classes:
+    print(f"{class_name}: {full_class_accuracy[class_name]:.2f}%")
+print(f"Overall Accuracy: {full_overall_accuracy:.2f}%")
+
 full_class_recall = {}
 full_weighted_recall = 0
 
@@ -109,17 +130,10 @@ for i in range(len(classes)):
     class_weight = np.sum(cm_full[i, :]) / full_total_samples
     full_weighted_recall += recall * class_weight * 100
 
-print("\nFull Dataset Accuracy Results:")
-for class_name in classes:
-    print(f"{class_name}: {full_class_accuracy[class_name]:.2f}%")
-print(f"Total: {full_overall_accuracy:.2f}%")
-
-print("\nFull Dataset Recall Results:")
+print("\n=== Full Dataset Recall Results ===")
 for class_name in classes:
     print(f"{class_name}: {full_class_recall[class_name]:.2f}%")
-print(f"Total: {full_weighted_recall:.2f}%")
+print(f"Weighted Recall: {full_weighted_recall:.2f}%")
 
-print("\nDetailed Classification Report:")
-print(
-    classification_report(all_true_labels, all_predicted_labels, target_names=classes)
-)
+print("\n=== Detailed Classification Report ===")
+print(classification_report(all_true_labels, all_predicted_labels, target_names=classes, digits=4))
