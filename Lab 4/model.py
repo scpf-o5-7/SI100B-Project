@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class SI100FaceNet(nn.Module):
     def __init__(self, num_classes=3, printtoggle=False):
         super().__init__()
@@ -24,28 +25,36 @@ class SI100FaceNet(nn.Module):
     def forward(self, x):
 
         x = self.conv1(x)
-        if self.print: print(f"After conv1: {x.shape}")
+        if self.print:
+            print(f"After conv1: {x.shape}")
         x = self.pool1(x)
-        if self.print: print(f"After pool1: {x.shape}")
+        if self.print:
+            print(f"After pool1: {x.shape}")
         x = self.relu1(x)
 
         x = self.conv2(x)
-        if self.print: print(f"After conv2: {x.shape}")
+        if self.print:
+            print(f"After conv2: {x.shape}")
         x = self.pool2(x)
-        if self.print: print(f"After pool2: {x.shape}")
+        if self.print:
+            print(f"After pool2: {x.shape}")
         x = self.relu2(x)
 
         x = self.conv3(x)
-        if self.print: print(f"After conv3: {x.shape}")
+        if self.print:
+            print(f"After conv3: {x.shape}")
         x = self.pool3(x)
-        if self.print: print(f"After pool3: {x.shape}")
+        if self.print:
+            print(f"After pool3: {x.shape}")
         x = self.relu3(x)
-        
+
         x = torch.flatten(x, start_dim=1)
-        if self.print: print(f"After flatten: {x.shape}")
+        if self.print:
+            print(f"After flatten: {x.shape}")
 
         x = self.fc(x)
-        if self.print: print(f"After fc: {x.shape}")
+        if self.print:
+            print(f"After fc: {x.shape}")
         x = self.relu_fc(x)
-        
+
         return x
