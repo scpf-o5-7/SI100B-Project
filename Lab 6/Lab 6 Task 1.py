@@ -1,10 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from torch.utils.data import DataLoader
-import torchvision.transforms as transforms
-from torchvision.datasets import ImageFolder
-import os
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 import sys
 
 sys.path.append("../Lab 2")
@@ -16,7 +14,7 @@ import my_net.utility as utility
 
 
 def plot_training_curves(losses, train_acc, val_acc=None):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7, 15))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 15))
 
     ax1.plot(losses, "b-", linewidth=2, label="Training Loss")
     ax1.set_title("Training Loss Over Epochs")
@@ -166,8 +164,6 @@ def analyze_model_performance():
             all_true_labels.extend(y.cpu().numpy())
             all_predicted_labels.extend(predicted.cpu().numpy())
 
-    from sklearn.metrics import confusion_matrix
-
     cm = confusion_matrix(
         all_true_labels, all_predicted_labels, labels=range(len(classes))
     )
@@ -205,8 +201,6 @@ def analyze_model_performance():
     print(f"\n=== 模型性能总结 ===")
     print(f"整体准确率: {overall_accuracy:.2f}%")
     print(f"加权召回率: {weighted_recall*100:.2f}%")
-
-    from sklearn.metrics import classification_report
 
     print("\n=== 详细分类报告 ===")
     print(
