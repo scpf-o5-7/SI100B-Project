@@ -6,12 +6,17 @@ import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 import os
 import sys
+
+sys.path.append("../Lab 2")
+sys.path.append("../Lab 3")
+sys.path.append("../Lab 4")
+
 from model import SI100FaceNet
 import my_net.utility as utility
 
 
 def plot_training_curves(losses, train_acc, val_acc=None):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7, 15))
 
     ax1.plot(losses, "b-", linewidth=2, label="Training Loss")
     ax1.set_title("Training Loss Over Epochs")
@@ -135,13 +140,13 @@ def analyze_model_performance():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    data_path = "./img"
+    data_path = "../Lab 4/img"
     batch_size = 32
 
     test_loader, classes = utility.loadTest(data_path, batch_size)
     print(f"Classes: {classes}")
 
-    model_path = "face_expression.pth"
+    model_path = "../Lab 4/face_expression.pth"
     model = SI100FaceNet(num_classes=3, printtoggle=False)
     model.load_state_dict(torch.load(model_path, weights_only=True))
     model.to(device)
@@ -182,8 +187,8 @@ def analyze_model_performance():
 
     class_recall = {}
     for i, class_name in enumerate(classes):
-        tp = cm[i, i]  # 真正例
-        fn = np.sum(cm[i, :]) - tp  # 假负例
+        tp = cm[i, i]
+        fn = np.sum(cm[i, :]) - tp
         recall = tp / (tp + fn) if (tp + fn) > 0 else 0
         class_recall[class_name] = recall * 100
 
