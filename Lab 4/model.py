@@ -8,23 +8,28 @@ class SI100FaceNet(nn.Module):
         self.print = printtoggle
 
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(64)
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.relu1 = nn.LeakyReLU(negative_slope=0.01)
 
         self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(128)
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.relu2 = nn.LeakyReLU(negative_slope=0.01)
 
         self.conv3 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm2d(256)
         self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.relu3 = nn.LeakyReLU(negative_slope=0.01)
 
+        self.dropout = nn.Dropout(p=0.5)
         self.fc = nn.Linear(256 * 6 * 6, num_classes)
         self.relu_fc = nn.LeakyReLU(negative_slope=0.01)
 
     def forward(self, x):
 
         x = self.conv1(x)
+        x = self.bn1(x)
         if self.print:
             print(f"After conv1: {x.shape}")
         x = self.pool1(x)
@@ -33,6 +38,7 @@ class SI100FaceNet(nn.Module):
         x = self.relu1(x)
 
         x = self.conv2(x)
+        x = self.bn2(x)
         if self.print:
             print(f"After conv2: {x.shape}")
         x = self.pool2(x)
@@ -41,6 +47,7 @@ class SI100FaceNet(nn.Module):
         x = self.relu2(x)
 
         x = self.conv3(x)
+        x = self.bn3(x)
         if self.print:
             print(f"After conv3: {x.shape}")
         x = self.pool3(x)
@@ -48,6 +55,7 @@ class SI100FaceNet(nn.Module):
             print(f"After pool3: {x.shape}")
         x = self.relu3(x)
 
+        x = self.dropout(x)
         x = torch.flatten(x, start_dim=1)
         if self.print:
             print(f"After flatten: {x.shape}")
