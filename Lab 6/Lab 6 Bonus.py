@@ -26,31 +26,31 @@ def nms(boxes, scores, overlap_threshold=0.5):
     y1 = boxes_np[:, 1]
     x2 = x1 + boxes_np[:, 2]
     y2 = y1 + boxes_np[:, 3]
-    
+
     areas = (x2 - x1 + 1) * (y2 - y1 + 1)
-    
+
     idxs = np.argsort(scores)[::-1]
-    
+
     keep = []
     while len(idxs) > 0:
         i = idxs[0]
         keep.append(i)
-        
+
         if len(idxs) == 1:
             break
-            
+
         xx1 = np.maximum(x1[i], x1[idxs[1:]])
         yy1 = np.maximum(y1[i], y1[idxs[1:]])
         xx2 = np.minimum(x2[i], x2[idxs[1:]])
         yy2 = np.minimum(y2[i], y2[idxs[1:]])
-        
+
         w = np.maximum(0, xx2 - xx1 + 1)
         h = np.maximum(0, yy2 - yy1 + 1)
-        
+
         overlap = (w * h) / (areas[idxs[1:]] + areas[i] - w * h)
-        
+
         idxs = idxs[1:][overlap < overlap_threshold]
-    
+
     return keep
 
 
@@ -86,35 +86,31 @@ class Detector:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         faces = self.face_cascade.detectMultiScale(
-            gray, 
-            scaleFactor=1.15, 
-            minNeighbors=5, 
-            minSize=(50, 50), 
-            maxSize=(400, 400)
+            gray, scaleFactor=1.15, minNeighbors=5, minSize=(50, 50), maxSize=(400, 400)
         )
 
         all_faces = []
         all_confidences = []
-        
+
         for x, y, w, h in faces:
             aspect_ratio = w / h
             if 0.5 < aspect_ratio < 2.0:
-                face_roi = img[y:y+h, x:x+w]
+                face_roi = img[y : y + h, x : x + w]
                 is_face, confidence = self.is_likely_face(face_roi)
                 if is_face:
                     all_faces.append((x, y, w, h))
                     all_confidences.append(confidence)
-        
+
         if len(all_faces) > 0:
             keep_indices = nms(all_faces, all_confidences, overlap_threshold=0.5)
             valid_faces = [all_faces[i] for i in keep_indices]
         else:
             valid_faces = []
-        
+
         for x, y, w, h in valid_faces:
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-            face_roi = img[y:y+h, x:x+w]
+            face_roi = img[y : y + h, x : x + w]
 
             if face_roi.size == 0:
                 continue
@@ -167,10 +163,10 @@ class Detector:
         skin_mask = cv2.inRange(hsv, lower_skin, upper_skin)
 
         skin_ratio = np.sum(skin_mask > 0) / (face_roi.shape[0] * face_roi.shape[1])
-        
+
         confidence = skin_ratio
         is_face = skin_ratio > 0.15
-        
+
         return is_face, confidence
 
     def transform2tensor(self, face_img):
@@ -190,8 +186,8 @@ def process_video(input_video_path, output_video_path, cascade_path, model_path)
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
 
     frame_count = 0
