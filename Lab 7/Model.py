@@ -2,14 +2,17 @@ import torchvision.models as models
 import torch.nn as nn
 
 
-class SI100FaceNet(nn.Module):
-    def __init__(self, num_classes=3, printtoggle=False):
+class SI100BFaceNet(nn.Module):
+    def __init__(self, num_classes=3, freeze_strategy="progressive"):
         super().__init__()
-        self.print = printtoggle
         self.resnet = models.resnet18(pretrained=True)
-        for param in self.resnet.parameters():
-            param.requires_grad = False
-        self.resnet.fc = nn.Linear(self.resnet.fc.in_features, num_classes)
+        
+        if freeze_strategy == "progressive":
+            for name, param in self.resnet.named_parameters():
+                if 'layer3' in name or 'layer4' in name or 'fc' in name:
+                    param.requires_grad = True
+                else:
+                    param.requires_grad = False
 
     def forward(self, x):
         x = self.resnet(x)

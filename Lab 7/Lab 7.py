@@ -4,7 +4,6 @@ sys.path.append("../Lab 4")
 
 import torch
 import my_net
-import torchvision.transforms as transforms
 
 from Model import SI100FaceNet
 from config import CLASS_CONFIG
@@ -20,7 +19,7 @@ train_loader = my_net.utility.loadTrain(config["data_path"], batchsize)
 val_loader = my_net.utility.loadTest(config["data_path"], batchsize)
 
 # Set model, lossfunc and optimizer
-model = SI100FaceNet(num_classes=config["num_classes"], printtoggle=True)
+model = SI100BFaceNet(num_classes=config["num_classes"], freeze_strategy="progressive")
 model = model.to(device)
 lossfun = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)

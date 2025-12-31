@@ -1,25 +1,26 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 import os
 import sys
 
 transform = {
-    "training": transforms.Compose([
-        transforms.RandomHorizontalFlip(p=0.5), 
-        transforms.RandomRotation(degrees=10),   
-        transforms.RandomCrop(size=44),          
-        transforms.Resize((48, 48)),             
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ]),
-    "evaluate": transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
+    "training": transforms.Compose(
+        [
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomRotation(degrees=10),
+            transforms.RandomCrop(size=44),
+            transforms.Resize((48, 48)),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        ]
+    ),
+    "evaluate": transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+    ),
 }
 
 
