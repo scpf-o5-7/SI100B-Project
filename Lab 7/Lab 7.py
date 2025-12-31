@@ -1,12 +1,12 @@
-import os
+import sys
 
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-os.environ["CONDA_DLL_SEARCH_MODIFICATION_ENABLE"] = "1"
+sys.path.append("../Lab 4")
 
 import torch
 import my_net
+import torchvision.transforms as transforms
 
-from model import SI100FaceNet
+from Model import SI100FaceNet
 from config import CLASS_CONFIG
 
 task_type = input("Enter task type (basic/bonus): ").strip().lower()
@@ -16,9 +16,8 @@ batchsize = 32
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("Training Device: ", device)
 
-# Load dataset
-train_loader, classes = my_net.utility.loadTrain(config["data_path"], batchsize)
-val_loader, _ = my_net.utility.loadTest(config["data_path"], batchsize)
+train_loader = my_net.utility.loadTrain(config["data_path"], batchsize)
+val_loader = my_net.utility.loadTest(config["data_path"], batchsize)
 
 # Set model, lossfunc and optimizer
 model = SI100FaceNet(num_classes=config["num_classes"], printtoggle=True)
