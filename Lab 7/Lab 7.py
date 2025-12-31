@@ -5,7 +5,7 @@ sys.path.append("../Lab 4")
 import torch
 import my_net
 
-from Model import SI100FaceNet
+from Model import SI100BFaceNet
 from config import CLASS_CONFIG
 
 task_type = input("Enter task type (basic/bonus): ").strip().lower()
@@ -34,7 +34,7 @@ print("Loss and accuracy in every iteration")
 for i, (loss, train_acc, val_acc) in enumerate(
     zip(losses, train_accuracy, val_accuracy)
 ):
-    print(f"Iteration {i}, loss: {loss:.4f}, train_accuracy: {train_acc:.2f}%")
+    print(f"Iteration {i}, loss: {loss:.4f}, train_accuracy: {train_acc:.2f}, val_accuracy: {val_acc:.2f}%")
 
 PATH = config["save_name"]
 torch.save(model.state_dict(), PATH)
