@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, classification_report
 import sys
 
-sys.path.append('../Lab 4')
+sys.path.append("../Lab 4")
 
 from model import SI100FaceNet
 
@@ -33,16 +33,14 @@ with torch.no_grad():
     new_labels = predicted.cpu().numpy()
     true_labels = y.cpu().numpy()
 
-    utility.imshow_with_labels(
-        X[:batch_size].cpu(), new_labels[:batch_size], classes
-    )
+    utility.imshow_with_labels(X[:batch_size].cpu(), new_labels[:batch_size], classes)
 
     cm = confusion_matrix(true_labels, new_labels, labels=range(len(classes)))
     print("\nConfusion Matrix (Single Batch):")
     print("     " + " ".join([f"{cls:>6}" for cls in classes]))
     for i, class_name in enumerate(classes):
         print(f"{class_name:>5} {cm[i]}")
-    
+
     class_precision = {}
     total_correct = 0
     total_samples = len(true_labels)
@@ -100,7 +98,9 @@ with torch.no_grad():
 all_true_labels = np.array(all_true_labels)
 all_predicted_labels = np.array(all_predicted_labels)
 
-cm_full = confusion_matrix(all_true_labels, all_predicted_labels, labels=range(len(classes)))
+cm_full = confusion_matrix(
+    all_true_labels, all_predicted_labels, labels=range(len(classes))
+)
 print("Full Dataset Confusion Matrix:")
 print("     " + " ".join([f"{cls:>6}" for cls in classes]))
 for i, class_name in enumerate(classes):
@@ -147,4 +147,8 @@ print(f"Macro Average Recall: {full_macro_recall:.2f}%")
 print(f"Weighted Average Recall: {full_weighted_recall:.2f}%")
 
 print("\n=== Detailed Classification Report ===")
-print(classification_report(all_true_labels, all_predicted_labels, target_names=classes, digits=4))
+print(
+    classification_report(
+        all_true_labels, all_predicted_labels, target_names=classes, digits=4
+    )
+)

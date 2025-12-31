@@ -198,11 +198,11 @@ def analyze_model_performance():
         class_weight = np.sum(cm[i, :]) / total_samples
         weighted_recall += class_recall[class_name] * class_weight / 100
 
-    print(f"\n=== 模型性能总结 ===")
-    print(f"整体准确率: {overall_accuracy:.2f}%")
-    print(f"加权召回率: {weighted_recall*100:.2f}%")
+    print(f"\n=== Summary of Model Performance ===")
+    print(f"Overall Accuracy: {overall_accuracy:.2f}%")
+    print(f"Weighted Recall: {weighted_recall*100:.2f}%")
 
-    print("\n=== 详细分类报告 ===")
+    print("\n=== Detailed Classification Report ===")
     print(
         classification_report(
             all_true_labels, all_predicted_labels, target_names=classes, digits=4
