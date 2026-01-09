@@ -2,8 +2,7 @@
 数据集处理
 """
 
-import os
-import cv2
+import datasets
 import torch
 import numpy as np
 from PIL import Image
@@ -16,83 +15,75 @@ import config
 
 
 class FaceEmotionDataset(Dataset):
-    """人脸表情数据集"""
+    """基于Hugging Face数据集的人脸表情数据集"""
 
-    def __init__(self, data_dir: str, is_train: bool = True):
+    def __init__(self, split: str = "train", is_train: bool = True):
         """
         初始化数据集
-
+        
         Args:
-            data_dir: 数据目录
+            split: 数据集分割 ('train' 或 'test')
             is_train: 是否为训练模式
         """
-        self.data_dir = data_dir
+        self.split = split
         self.is_train = is_train
         self.class_names = config.Config.CLASS_NAMES
-        self.class_to_idx = {name: idx for idx, name in enumerate(self.class_names)}
-
-        # 收集数据
-        self.samples = self._load_samples()
-
+        
+        # 加载Hugging Face数据集
+        self.dataset = datasets.load_dataset(
+            config.Config.HF_DATASET_NAME,
+            split=split
+        )
+        
         # 数据增强
         self.transform = self._get_transforms()
-
-    def _load_samples(self) -> List[Tuple[str, int]]:
-        """加载所有样本"""
-        samples = []
-        for class_name in self.class_names:
-            class_dir = os.path.join(self.data_dir, class_name)
-            if not os.path.exists(class_dir):
-                continue
-
-            for img_name in os.listdir(class_dir):
-                if img_name.endswith((".jpg", ".jpeg", ".png")):
-                    img_path = os.path.join(class_dir, img_name)
-                    class_idx = self.class_to_idx[class_name]
-                    samples.append((img_path, class_idx))
-
-        return samples
 
     def _get_transforms(self):
         """获取数据增强转换"""
         if self.is_train:
-            return A.Compose(
-                [
-                    A.HorizontalFlip(p=0.5),
-                    A.Rotate(limit=15, p=0.5),
-                    A.RandomBrightnessContrast(p=0.3),
-                    A.GaussNoise(var_limit=(10.0, 50.0), p=0.2),
-                    A.CoarseDropout(
-                        max_holes=8,
-                        max_height=20,
-                        max_width=20,
-                        min_holes=1,
-                        min_height=10,
-                        min_width=10,
-                        p=0.3,
-                    ),
-                    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                    ToTensorV2(),
-                ]
-            )
+            return A.Compose([
+                A.Resize(config.Config.IMAGE_SIZE, config.Config.IMAGE_SIZE),  # 从48x48调整到224x224
+                A.HorizontalFlip(p=0.5),
+                A.Rotate(limit=15, p=0.5),
+                A.RandomBrightnessContrast(p=0.3),
+                A.GaussNoise(var_limit=(10.0, 50.0), p=0.2),
+                A.CoarseDropout(max_holes=8, max_height=20, max_width=20, 
+                              min_holes=1, min_height=10, min_width=10, p=0.3),
+                A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                ToTensorV2(),
+            ])
         else:
-            return A.Compose(
-                [
-                    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                    ToTensorV2(),
-                ]
-            )
+            return A.Compose([
+                A.Resize(config.Config.IMAGE_SIZE, config.Config.IMAGE_SIZE),  # 从48x48调整到224x224
+                A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                ToTensorV2(),
+            ])
 
     def __len__(self) -> int:
-        return len(self.samples)
+        return len(self.dataset)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
-        img_path, label = self.samples[idx]
-
-        # 读取图像
-        image = cv2.imread(img_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
+        # 获取样本
+        sample = self.dataset[idx]
+        
+        # 提取图像 - 使用jpg字段
+        if 'jpg' in sample:
+            pil_image = sample['jpg']
+            # 将PIL图像转换为numpy数组
+            image = np.array(pil_image)
+        else:
+            raise KeyError("数据集中没有找到jpg图像字段")
+        
+        # 灰度图转换为RGB (48x48 灰度 -> 224x224 RGB)
+        if len(image.shape) == 2:  # 灰度图 (H, W)
+            image = np.stack([image] * 3, axis=-1)  # 转换为 (H, W, 3)
+        
+        # 获取标签 - 使用cls字段
+        if 'cls' in sample:
+            label = int(sample['cls'])
+        else:
+            raise KeyError("数据集中没有找到cls标签字段")
+        
         # 应用转换
         if self.transform:
             transformed = self.transform(image=image)
@@ -166,21 +157,18 @@ class FaceDetector:
 
 def get_data_loaders(batch_size: int = None) -> Tuple[DataLoader, DataLoader]:
     """
-    获取数据加载器
-
-    Args:
-        batch_size: 批大小
-
-    Returns:
-        train_loader: 训练数据加载器
-        val_loader: 验证数据加载器
+    获取数据加载器（基于Hugging Face数据集）
     """
     if batch_size is None:
         batch_size = config.Config.BATCH_SIZE
 
     # 创建数据集
-    train_dataset = FaceEmotionDataset(config.Config.TRAIN_DATA_DIR, is_train=True)
-    val_dataset = FaceEmotionDataset(config.Config.VAL_DATA_DIR, is_train=False)
+    train_dataset = FaceEmotionDataset(
+        split=config.Config.HF_DATASET_SPLIT_TRAIN, is_train=True
+    )
+    val_dataset = FaceEmotionDataset(
+        split=config.Config.HF_DATASET_SPLIT_VAL, is_train=False
+    )
 
     # 创建数据加载器
     train_loader = DataLoader(

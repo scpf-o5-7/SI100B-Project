@@ -37,15 +37,16 @@ class EfficientNetEmotionClassifier(nn.Module):
             features_only=False
         )
 
+        # 获取特征维度
         with torch.no_grad():
             dummy_input = torch.randn(1, 3, config.Config.IMAGE_SIZE, config.Config.IMAGE_SIZE)
-            features = self.backbone(dummy_input)  # 获取backbone输出
-            # 调整特征形状：如果输出是[B, C, H, W]，则全局平均池化后为[B, C]
+            features = self.backbone(dummy_input)
             if features.dim() == 4:  # 如果是4D张量，需要池化
                 features = nn.AdaptiveAvgPool2d(1)(features)  # 全局平均池化
                 features = features.view(features.size(0), -1)  # 展平
-            in_features = features.shape[1]  # 现在in_features已定义
+            in_features = features.shape[1]
 
+        # SE块（Squeeze-and-Excitation注意力机制）
         self.se_block = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),  # 全局平均池化
             nn.Flatten(),
@@ -92,24 +93,43 @@ class EfficientNetEmotionClassifier(nn.Module):
         Returns:
             logits: 输出logits
         """
+        # 提取特征
         features = self.backbone(x)
-
-        # 新增SE块处理
-        if features.dim() == 2:
-            features = features.unsqueeze(-1).unsqueeze(-1)
-        se_weights = self.se_block(features)  # 生成通道权重[B, C]
-        se_weights = se_weights.unsqueeze(-1).unsqueeze(-1)  # 调整为[B, C, 1, 1]
-        weighted_features = features * se_weights  # 通道重加权
-
-        if weighted_features.dim() == 4:
-            weighted_features = weighted_features.view(weighted_features.size(0), -1)
-        logits = self.classifier(weighted_features)
+        
+        # 处理SE块 - 确保特征形状正确
+        if features.dim() == 4:  # [B, C, H, W]
+            # 应用SE注意力机制
+            se_weights = self.se_block(features)  # [B, C]
+            se_weights = se_weights.unsqueeze(-1).unsqueeze(-1)  # [B, C, 1, 1]
+            weighted_features = features * se_weights  # 通道重加权
+            
+            # 全局池化
+            pooled_features = nn.AdaptiveAvgPool2d(1)(weighted_features)  # [B, C, 1, 1]
+            flattened_features = pooled_features.view(pooled_features.size(0), -1)  # [B, C]
+        else:  # 如果backbone直接输出展平的特征
+            # 对于1D特征，简化SE块处理
+            if features.dim() == 2:  # [B, C]
+                # 创建伪空间维度以应用SE块
+                spatial_features = features.unsqueeze(-1).unsqueeze(-1)  # [B, C, 1, 1]
+                se_weights = self.se_block(spatial_features)  # [B, C]
+                flattened_features = features * se_weights  # 通道重加权
+            else:
+                flattened_features = features.view(features.size(0), -1)
+        
+        # 分类
+        logits = self.classifier(flattened_features)
         return logits
     
     def get_features(self, x: torch.Tensor) -> torch.Tensor:
-        """获取特征向量"""
-        return self.backbone(x)
-
+        """获取特征向量（用于AdCorre损失）"""
+        features = self.backbone(x)
+        
+        # 处理特征形状
+        if features.dim() == 4:
+            features = nn.AdaptiveAvgPool2d(1)(features)
+            features = features.view(features.size(0), -1)
+        
+        return features
 
 class FaceEmotionSystem:
     """完整的人脸表情识别系统"""

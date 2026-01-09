@@ -20,6 +20,10 @@ def evaluate_model(model_path: str = None, save_plots: bool = True):
     
     # 获取数据加载器
     train_loader, val_loader = get_data_loaders(batch_size=32)
+
+    print(f"Using dataset: {cfg.HF_DATASET_NAME}")
+    print(f"Train samples: {len(train_loader.dataset)}")
+    print(f"Validation samples: {len(val_loader.dataset)}")
     
     # 加载模型
     if model_path is None:

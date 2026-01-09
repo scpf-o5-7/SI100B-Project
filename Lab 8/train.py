@@ -6,7 +6,7 @@ from pyexpat import features
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 import numpy as np
 from tqdm import tqdm
 from typing import Tuple
@@ -42,6 +42,7 @@ def train_epoch(model: nn.Module,
 
         loss = criterion(outputs, targets, features)
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
         
         # 统计
@@ -112,6 +113,11 @@ def train():
     
     # 获取数据加载器
     train_loader, val_loader = get_data_loaders()
+
+    print(f"Starting training on {cfg.DEVICE}")
+    print(f"Train samples: {len(train_loader.dataset)}")
+    print(f"Val samples: {len(val_loader.dataset)}")
+    print(f"Dataset: {cfg.HF_DATASET_NAME}")
     
     # 初始化模型
     model = EfficientNetEmotionClassifier(
@@ -128,7 +134,12 @@ def train():
     )
     
     # 学习率调度器
-    scheduler = CosineAnnealingLR(optimizer, T_max=cfg.NUM_EPOCHS)
+    scheduler = CosineAnnealingWarmRestarts(
+        optimizer, 
+        T_0=10,        # 第一次重启的周期
+        T_mult=2,      # 每次重启周期翻倍
+        eta_min=1e-6   # 最小学习率
+    )
     
     # 早停
     early_stopping = EarlyStopping(patience=5, verbose=True)
