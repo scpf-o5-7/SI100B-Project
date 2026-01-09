@@ -2,6 +2,7 @@
 训练脚本
 """
 import os
+from pyexpat import features
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -9,6 +10,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 import numpy as np
 from tqdm import tqdm
 from typing import Tuple
+from losses import AdCorreLoss
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -33,12 +35,12 @@ def train_epoch(model: nn.Module,
     for batch_idx, (inputs, targets) in enumerate(pbar):
         inputs, targets = inputs.to(device), targets.to(device)
         
-        # 前向传播
         optimizer.zero_grad()
         outputs = model(inputs)
-        loss = criterion(outputs, targets)
-        
-        # 反向传播
+
+        features = model.get_features(inputs)
+
+        loss = criterion(outputs, targets, features)
         loss.backward()
         optimizer.step()
         
@@ -79,7 +81,8 @@ def validate(model: nn.Module,
             inputs, targets = inputs.to(device), targets.to(device)
             
             outputs = model(inputs)
-            loss = criterion(outputs, targets)
+            features = model.get_features(inputs)
+            loss = criterion(outputs, targets, features)
             
             running_loss += loss.item()
             _, predicted = outputs.max(1)
@@ -117,7 +120,7 @@ def train():
     ).to(cfg.DEVICE)
     
     # 损失函数和优化器
-    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+    criterion = AdCorreLoss(lambda_val=0.5, num_classes=cfg.NUM_CLASSES)
     optimizer = optim.AdamW(
         model.parameters(),
         lr=cfg.LEARNING_RATE,
@@ -128,7 +131,7 @@ def train():
     scheduler = CosineAnnealingLR(optimizer, T_max=cfg.NUM_EPOCHS)
     
     # 早停
-    early_stopping = EarlyStopping(patience=10, verbose=True)
+    early_stopping = EarlyStopping(patience=5, verbose=True)
     
     # 训练记录
     history = {
