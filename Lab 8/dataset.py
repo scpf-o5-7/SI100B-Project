@@ -46,9 +46,14 @@ class FaceEmotionDataset(Dataset):
                 A.HorizontalFlip(p=0.5),
                 A.Rotate(limit=15, p=0.5),
                 A.RandomBrightnessContrast(p=0.3),
-                A.GaussNoise(var_limit=(10.0, 50.0), p=0.2),
+                A.GaussNoise(var_limit=(10.0, 50.0), p=0.3),
                 A.CoarseDropout(max_holes=8, max_height=20, max_width=20, 
                               min_holes=1, min_height=10, min_width=10, p=0.3),
+                A.ElasticTransform(alpha=1, sigma=50, alpha_affine=50, p=0.3),  # 弹性变形
+                A.OneOf([
+                    A.MotionBlur(blur_limit=3, p=0.5),  # 运动模糊
+                    A.MedianBlur(blur_limit=3, p=0.5),  # 中值模糊
+                ], p=0.3),
                 A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                 ToTensorV2(),
             ])

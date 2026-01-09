@@ -25,7 +25,7 @@ class Config:
 
     # 训练配置
     BATCH_SIZE = 32
-    NUM_EPOCHS = 50
+    NUM_EPOCHS = 30
     LEARNING_RATE = 1e-4
     WEIGHT_DECAY = 1e-4
 

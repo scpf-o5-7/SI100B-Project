@@ -126,23 +126,28 @@ def train():
     ).to(cfg.DEVICE)
     
     # 损失函数和优化器
-    criterion = AdCorreLoss(lambda_val=0.5, num_classes=cfg.NUM_CLASSES)
+    criterion = AdCorreLoss(initial_lambda=0.4, num_classes=cfg.NUM_CLASSES)
     optimizer = optim.AdamW(
         model.parameters(),
         lr=cfg.LEARNING_RATE,
-        weight_decay=cfg.WEIGHT_DECAY
+        weight_decay=cfg.WEIGHT_DECAY,
+        betas=(0.9, 0.999)
     )
     
     # 学习率调度器
     scheduler = CosineAnnealingWarmRestarts(
         optimizer, 
-        T_0=10,        # 第一次重启的周期
-        T_mult=2,      # 每次重启周期翻倍
-        eta_min=1e-6   # 最小学习率
+        T_0=4,        
+        T_mult=1,      
+        eta_min=1e-6   
     )
     
     # 早停
-    early_stopping = EarlyStopping(patience=5, verbose=True)
+    early_stopping = EarlyStopping(
+        patience=4,        # 减少耐心值
+        min_delta=0.001,   # 设置最小改善阈值
+        verbose=True
+    )
     
     # 训练记录
     history = {

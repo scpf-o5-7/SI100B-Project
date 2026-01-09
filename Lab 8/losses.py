@@ -3,13 +3,21 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class AdCorreLoss(nn.Module):
-    def __init__(self, lambda_val=0.5, num_classes=7):
+    def __init__(self, initial_lambda=0.4, num_classes=7):
         super().__init__()
-        self.lambda_val = lambda_val
+        self.lambda_val = initial_lambda
         self.num_classes = num_classes
         self.ce_loss = nn.CrossEntropyLoss()
     
-    def forward(self, outputs, targets, features):
+    def forward(self, outputs, targets, features, epoch):
+
+        if epoch < 5:
+            self.lambda_val = 0.4
+        elif epoch < 10:
+            self.lambda_val = 0.6
+        else:
+            self.lambda_val = 0.5
+
         # 交叉熵损失
         ce_loss = self.ce_loss(outputs, targets)
         
