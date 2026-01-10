@@ -34,7 +34,6 @@ class Config:
 
     @staticmethod
     def to_dict() -> Dict[str, Any]:
-        """转换为字典"""
         return {
             k: v
             for k, v in Config.__dict__.items()
