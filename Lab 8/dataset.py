@@ -1,7 +1,3 @@
-"""
-数据集处理
-"""
-
 import datasets
 import torch
 import numpy as np
@@ -15,81 +11,100 @@ import config
 
 
 class FaceEmotionDataset(Dataset):
-    """基于Hugging Face数据集的人脸表情数据集"""
 
     def __init__(self, split: str = "train", is_train: bool = True):
-        """
-        初始化数据集
-        
-        Args:
-            split: 数据集分割 ('train' 或 'test')
-            is_train: 是否为训练模式
-        """
         self.split = split
         self.is_train = is_train
         self.class_names = config.Config.CLASS_NAMES
-        
-        # 加载Hugging Face数据集
-        self.dataset = datasets.load_dataset(
-            config.Config.HF_DATASET_NAME,
-            split=split
-        )
-        
-        # 数据增强
+
+        self.dataset = datasets.load_dataset(config.Config.HF_DATASET_NAME, split=split)
+
         self.transform = self._get_transforms()
 
     def _get_transforms(self):
-        """获取数据增强转换"""
         if self.is_train:
-            return A.Compose([
-                A.Resize(config.Config.IMAGE_SIZE, config.Config.IMAGE_SIZE),  # 从48x48调整到224x224
-                A.HorizontalFlip(p=0.5),
-                A.Rotate(limit=15, p=0.5),
-                A.RandomBrightnessContrast(p=0.3),
-                A.GaussNoise(var_limit=(10.0, 50.0), p=0.3),
-                A.CoarseDropout(max_holes=8, max_height=20, max_width=20, 
-                              min_holes=1, min_height=10, min_width=10, p=0.3),
-                A.ElasticTransform(alpha=1, sigma=50, alpha_affine=50, p=0.3),  # 弹性变形
-                A.OneOf([
-                    A.MotionBlur(blur_limit=3, p=0.5),  # 运动模糊
-                    A.MedianBlur(blur_limit=3, p=0.5),  # 中值模糊
-                ], p=0.3),
-                A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                ToTensorV2(),
-            ])
+            return A.Compose(
+                [
+                    A.Resize(config.Config.IMAGE_SIZE, config.Config.IMAGE_SIZE),
+                    A.OneOf(
+                        [
+                            A.HorizontalFlip(p=0.5),
+                            A.VerticalFlip(p=0.1),
+                        ],
+                        p=0.3,
+                    ),
+                    A.Rotate(limit=15, p=0.5),
+                    A.OneOf(
+                        [
+                            A.RandomBrightnessContrast(p=0.5),
+                            A.HueSaturationValue(p=0.5),
+                            A.CLAHE(p=0.3),
+                        ],
+                        p=0.5,
+                    ),
+                    A.OneOf(
+                        [
+                            A.GaussNoise(var_limit=(10.0, 50.0), p=0.5),
+                            A.ISONoise(p=0.5),
+                        ],
+                        p=0.3,
+                    ),
+                    A.CoarseDropout(
+                        max_holes=8,
+                        max_height=20,
+                        max_width=20,
+                        min_holes=1,
+                        min_height=10,
+                        min_width=10,
+                        p=0.3,
+                    ),
+                    A.ElasticTransform(alpha=1, sigma=50, alpha_affine=50, p=0.3),
+                    A.OneOf(
+                        [
+                            A.MotionBlur(blur_limit=3, p=0.5),
+                            A.MedianBlur(blur_limit=3, p=0.5),
+                            A.GaussianBlur(blur_limit=3, p=0.3),
+                        ],
+                        p=0.3,
+                    ),
+                    A.RandomGamma(p=0.2),
+                    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                    ToTensorV2(),
+                ]
+            )
         else:
-            return A.Compose([
-                A.Resize(config.Config.IMAGE_SIZE, config.Config.IMAGE_SIZE),  # 从48x48调整到224x224
-                A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                ToTensorV2(),
-            ])
+            return A.Compose(
+                [
+                    A.Resize(config.Config.IMAGE_SIZE, config.Config.IMAGE_SIZE),
+                    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                    ToTensorV2(),
+                ]
+            )
 
     def __len__(self) -> int:
         return len(self.dataset)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
-        # 获取样本
+
         sample = self.dataset[idx]
-        
-        # 提取图像 - 使用jpg字段
-        if 'jpg' in sample:
-            pil_image = sample['jpg']
-            # 将PIL图像转换为numpy数组
+
+        if "jpg" in sample:
+            pil_image = sample["jpg"]
+
             image = np.array(pil_image)
         else:
-            raise KeyError("数据集中没有找到jpg图像字段")
-        
-        # 灰度图转换为RGB (48x48 灰度 -> 224x224 RGB)
-        if len(image.shape) == 2:  # 灰度图 (H, W)
-            image = np.stack([image] * 3, axis=-1)  # 转换为 (H, W, 3)
-        
-        # 获取标签 - 使用cls字段
-        if 'cls' in sample:
-            label = int(sample['cls'])
+            raise KeyError("No JPG image field was found in the dataset.")
+
+        if len(image.shape) == 2:
+            image = np.stack([image] * 3, axis=-1)
+        elif image.shape[2] == 1:
+            image = np.repeat(image, 3, axis=2)
+
+        if "cls" in sample:
+            label = int(sample["cls"])
         else:
-            raise KeyError("数据集中没有找到cls标签字段")
-        
-        # 应用转换
+            raise KeyError("No cls label field was found in the dataset.")
+
         if self.transform:
             transformed = self.transform(image=image)
             image = transformed["image"]
@@ -98,17 +113,11 @@ class FaceEmotionDataset(Dataset):
 
 
 class FaceDetector:
-    """人脸检测器"""
 
     def __init__(self, device: str = "cuda" if torch.cuda.is_available() else "cpu"):
-        """
-        初始化人脸检测器
 
-        Args:
-            device: 计算设备
-        """
         self.device = torch.device(device)
-        # 使用MTCNN进行人脸检测
+
         self.mtcnn = MTCNN(
             keep_all=True,
             thresholds=[0.6, 0.7, 0.7],
@@ -120,20 +129,9 @@ class FaceDetector:
     def detect_faces(
         self, image: np.ndarray
     ) -> Tuple[List[np.ndarray], List[Tuple[int, int, int, int]]]:
-        """
-        检测图像中的人脸
 
-        Args:
-            image: 输入图像 (RGB格式)
-
-        Returns:
-            faces: 裁剪出的人脸图像列表
-            boxes: 人脸边界框列表 (x1, y1, x2, y2)
-        """
-        # 转换为PIL图像
         image_pil = Image.fromarray(image)
 
-        # 检测人脸
         boxes, probs = self.mtcnn.detect(image_pil)
 
         faces = []
@@ -143,7 +141,7 @@ class FaceDetector:
             h, w = image.shape[:2]
             for box, prob in zip(boxes, probs):
                 if prob > config.Config.CONFIDENCE_THRESHOLD:
-                    # 扩展边界框
+
                     x1, y1, x2, y2 = box
                     margin = config.Config.FACE_DETECTION_MARGIN
                     x1 = max(0, int(x1) - margin)
@@ -151,7 +149,6 @@ class FaceDetector:
                     x2 = min(w, int(x2) + margin)
                     y2 = min(h, int(y2) + margin)
 
-                    # 裁剪人脸
                     face = image[y1:y2, x1:x2]
                     if face.size > 0:
                         faces.append(face)
@@ -161,13 +158,10 @@ class FaceDetector:
 
 
 def get_data_loaders(batch_size: int = None) -> Tuple[DataLoader, DataLoader]:
-    """
-    获取数据加载器（基于Hugging Face数据集）
-    """
+
     if batch_size is None:
         batch_size = config.Config.BATCH_SIZE
 
-    # 创建数据集
     train_dataset = FaceEmotionDataset(
         split=config.Config.HF_DATASET_SPLIT_TRAIN, is_train=True
     )
@@ -175,7 +169,6 @@ def get_data_loaders(batch_size: int = None) -> Tuple[DataLoader, DataLoader]:
         split=config.Config.HF_DATASET_SPLIT_VAL, is_train=False
     )
 
-    # 创建数据加载器
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
