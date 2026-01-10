@@ -7,6 +7,7 @@ from typing import Dict, Any
 
 
 class Config:
+    
     # 路径配置
     # TRAIN_DATA_DIR = "../Lab 4/img/train"
     # VAL_DATA_DIR = "../Lab 4/img/validation"

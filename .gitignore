@@ -19,6 +19,8 @@ Lab 4/img_bonus/
 
 Lab 2/haar-cascade-files/
 
+test/
+
 __pycache__/
 *.pyc
 *.pyo
