@@ -71,9 +71,6 @@ def process_video(
     system = FaceEmotionSystem(config.Config.MODEL_SAVE_PATH)
 
     cap = cv2.VideoCapture(video_path)
-    if not cap.isOpened():
-        print(f"Error: Failed to open video at {video_path}")
-        return
 
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
